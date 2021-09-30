@@ -3,17 +3,22 @@ import numpy as np
 from datetime import datetime, timedelta, date
 import utils 
 from assets import pattern_list 
+import plotly.graph_objs as go 
 import boto3
 import os 
+import io
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import matplotlib.pyplot as plt  
 import json
 from talib import abstract
+import mplfinance as mpf
 main_dir = os.path.dirname(os.getcwd())
 
 # AWS S3 Credentials
 s3 = boto3.resource(
         's3',
-        aws_access_key_id= os.environ['aws_access_key_id'],
-        aws_secret_access_key = os.environ['aws_secret_access_key'] 
+        aws_access_key_id= os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY'] 
         )
 
 # Load list of SPY500 symbols
@@ -22,7 +27,7 @@ df_spy500 = pd.read_csv(main_dir+'/main/assets/spy500_list.csv', index_col = 0)
 # Yesterday's Date
 d =  datetime.today() #+ timedelta(days=1) 
 dend = d - timedelta(days=2) if d.weekday() == 6 else d - timedelta(days=1) if  d.weekday() == 5 else d
-dstart = d - timedelta(days=10) 
+dstart = d - timedelta(days=60) 
 
 # Get list of all possible patterns from pattern_list
 pattern_options = pattern_list.pattern_list
@@ -31,7 +36,32 @@ pattern_options = pattern_list.pattern_list
 summary = {}
 for i, symbol in enumerate(df_spy500.Symbol[:100]):
 	data = utils.get_data(symbol, start=dstart, end=dend)
+	data.index = pd.to_datetime(data.index)
+
+	# Create Plot and save it
+	#kwargs = dict(type='candle', mav=(3,6), figratio=(11,8) ,figscale=1.1)
+	#fig = mpf.plot(data,**kwargs,style='binance')
+	#canvas = FigureCanvasAgg(fig) # renders figure onto canvas
+	#imdata = io.BytesIO() # prepares in-memory binary stream buffer (think of this as a txt file but purely in memory)
+	#canvas.print_png(imdata)
+
+
+	#plotyl 
+	fig = go.Figure()
+	fig.add_trace( go.Candlestick( x = data.index ,
+                                    open = data.open,
+                                    high = data.high,
+                                    low = data.low,
+                                    close = data.close,
+                                    showlegend=False,
+                                    name = 'OHLC'
+                                    )
+		)
+	img_bytes = fig.to_image(format="png")
+	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes, ContentType='image/png', Key=f'Figures/{symbol}')
+	break
 	if len(data)==0: continue;
+	data = data[-10:]
 	patterns_found = []
 	for pattern, name in pattern_options.items():
 		pattern_func = abstract.Function(pattern)
@@ -42,22 +72,24 @@ for i, symbol in enumerate(df_spy500.Symbol[:100]):
 			pattern_direction = list( data[ data[name] != 0 ][name].values )
 			patterns_found.append( (pattern, pattern_idx[-1], pattern_direction[-1] ) )
 
-	print(data)
-	#print(patterns_found)
-	#print()
 	if len(patterns_found)!=0:
 		last_pattern_date = max(patterns_found, key=lambda item: item[1])[1] 
 		patterns_found = [ item for item in patterns_found if item[1]==last_pattern_date]
-		#print(patterns_found)
 		summary[symbol] = patterns_found
-	print('======================')
+		list_figures.append( (symbol, img_bytes) )
 
 
+exit()
 # Dump summary in S3 Bucket
 s3.Bucket('patternsummarybucket').put_object(
      Body= json.dumps(summary, sort_keys=True, indent = 4, default=str),
      Key='summary'
 )
+
+
+# Save imgs to S3 Bucket
+for symbol, img in list_figures:
+	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes.getvalue(), ContentType='image/png', Key=f'Figures/{symbol}')
 
 
 
