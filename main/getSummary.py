@@ -10,6 +10,7 @@ import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot as plt  
 import json
+from base64 import b64encode
 from talib import abstract
 import mplfinance as mpf
 main_dir = os.path.dirname(os.getcwd())
@@ -34,17 +35,11 @@ pattern_options = pattern_list.pattern_list
 
 # Loop through symbols to identify patterns
 summary = {}
+list_figures = []
 for i, symbol in enumerate(df_spy500.Symbol[:100]):
 	data = utils.get_data(symbol, start=dstart, end=dend)
+	if len(data)==0: continue;
 	data.index = pd.to_datetime(data.index)
-
-	# Create Plot and save it
-	#kwargs = dict(type='candle', mav=(3,6), figratio=(11,8) ,figscale=1.1)
-	#fig = mpf.plot(data,**kwargs,style='binance')
-	#canvas = FigureCanvasAgg(fig) # renders figure onto canvas
-	#imdata = io.BytesIO() # prepares in-memory binary stream buffer (think of this as a txt file but purely in memory)
-	#canvas.print_png(imdata)
-
 
 	#plotyl 
 	fig = go.Figure()
@@ -56,11 +51,15 @@ for i, symbol in enumerate(df_spy500.Symbol[:100]):
                                     showlegend=False,
                                     name = 'OHLC'
                                     )
-		)
+							)
+	fig.update_layout(xaxis_rangeslider_visible=False, paper_bgcolor = '#303030',	plot_bgcolor = '#303030')
+	fig.update_xaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A"))
+	fig.update_yaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A") )
+	#fig.show()
+	#break
 	img_bytes = fig.to_image(format="png")
-	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes, ContentType='image/png', Key=f'Figures/{symbol}')
-	break
-	if len(data)==0: continue;
+	
+	
 	data = data[-10:]
 	patterns_found = []
 	for pattern, name in pattern_options.items():
@@ -78,19 +77,13 @@ for i, symbol in enumerate(df_spy500.Symbol[:100]):
 		summary[symbol] = patterns_found
 		list_figures.append( (symbol, img_bytes) )
 
-
-exit()
 # Dump summary in S3 Bucket
 s3.Bucket('patternsummarybucket').put_object(
      Body= json.dumps(summary, sort_keys=True, indent = 4, default=str),
      Key='summary'
 )
 
-
 # Save imgs to S3 Bucket
 for symbol, img in list_figures:
-	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes.getvalue(), ContentType='image/png', Key=f'Figures/{symbol}')
-
-
-
+	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes, ContentType='image/png', Key=f'Figures/{symbol}')
 

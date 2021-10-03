@@ -11,6 +11,8 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 
 from talib import abstract
+from base64 import b64encode
+
 
 from app import app
 import json
@@ -46,6 +48,13 @@ s3 = boto3.resource(
 
 obj = s3.Object('patternsummarybucket', 'summary' )
 summary = json.load(obj.get()['Body'])
+
+
+
+obj = s3.Object('patternsummarybucket', f'Figures/A' )
+fig_data = obj.get()['Body'].read()  
+encoding = b64encode(fig_data).decode()
+img_b64 = "data:image/png;base64," + encoding
 
 #=====================================================================================#
 #=====================================================================================#
@@ -197,7 +206,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 
 		# DATE(S)
 		dates = np.unique([ item[1] for item in v])
-		date_line = html.P( [html.Strong('LAST PATTERN: '), dates[0] ] )
+		date_line = html.P( [html.Strong('LAST PATTERN: '), str(dates[0]).split('T')[0] ] )
 
 		# TYPE OF PATTERN(S)
 		patterns = [ item[0] for item in v ]
@@ -209,6 +218,10 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 		strength_patterns = np.unique([pattern_list.pattern_img[pattern][2] if len(pattern_list.pattern_img[pattern])==4 else 'Unknown' for pattern in patterns  ])
 		strength_line = html.P([ html.Strong('STRENGTH: ') , ', '.join(strength_patterns) ])
 
+		# Figure from S3 AWS Bucket
+		fig = html.Img(src=img_b64, style={'width': '100%'})
+
+        #---------------------------------------------------------------------#
 		summary_description = html.P( [date_line, type_line,  strength_line,] )
 		card_tmp=  html.Div( 
 		    	[
@@ -223,7 +236,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
                 								style = {'height': '40px'}),
 	                        html.Div(className='row', children = [
 	                        	html.Div( children = summary_description, className='col', style={'marginTop':'30px', 'marginBottom':'30px', 'marginLeft':'40px'} ),
-	                        	html.Div( className='col', style={'background-color':'white', 'marginRight':'20px'} ),
+	                        	html.Div( fig, className='col' ),
 
 	                        	])
 		               ], className="card")
