@@ -49,12 +49,18 @@ s3 = boto3.resource(
 obj = s3.Object('patternsummarybucket', 'summary' )
 summary = json.load(obj.get()['Body'])
 
+# Load Figures from S3 AWS Bucket
+figure_dict = {}
+prefix = "Figures/"
+bucket = s3.Bucket(name="patternsummarybucket")
+for obj in bucket.objects.filter(Prefix=prefix):
+	fig_data = obj.get()['Body'].read() 
+	encoding = b64encode(fig_data).decode()
+	img_b64 = "data:image/png;base64," + encoding
+	symbol = str(obj.key).split('/')[1]
+	figure_dict[symbol] = img_b64
 
 
-obj = s3.Object('patternsummarybucket', f'Figures/A' )
-fig_data = obj.get()['Body'].read()  
-encoding = b64encode(fig_data).decode()
-img_b64 = "data:image/png;base64," + encoding
 
 #=====================================================================================#
 #=====================================================================================#
@@ -206,7 +212,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 
 		# DATE(S)
 		dates = np.unique([ item[1] for item in v])
-		date_line = html.P( [html.Strong('LAST PATTERN: '), str(dates[0]).split('T')[0] ] )
+		date_line = html.P( [html.Strong('LAST PATTERN(S): '), str(dates[0]).split('T')[0] ] )
 
 		# TYPE OF PATTERN(S)
 		patterns = [ item[0] for item in v ]
@@ -219,7 +225,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 		strength_line = html.P([ html.Strong('STRENGTH: ') , ', '.join(strength_patterns) ])
 
 		# Figure from S3 AWS Bucket
-		fig = html.Img(src=img_b64, style={'width': '100%'})
+		fig = html.Img(src=figure_dict[symbol], style={'width': '100%'})
 
         #---------------------------------------------------------------------#
 		summary_description = html.P( [date_line, type_line,  strength_line,] )

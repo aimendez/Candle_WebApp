@@ -85,5 +85,5 @@ s3.Bucket('patternsummarybucket').put_object(
 
 # Save imgs to S3 Bucket
 for symbol, img in list_figures:
-	s3.Bucket('patternsummarybucket').put_object(Body=img_bytes, ContentType='image/png', Key=f'Figures/{symbol}')
+	s3.Bucket('patternsummarybucket').put_object(Body=img, ContentType='image/png', Key=f'Figures/{symbol}')
 
