@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 from dash import html 
 from dash.dependencies import Input, Output
 from app import app
-from pages import SummaryPage
+from pages import SummaryPage, SymbolPage
 import utils 
 
 server = app.server
@@ -40,7 +40,7 @@ navbar = dbc.Navbar(
             href="/",
         ),
 
-        dbc.NavItem(dbc.NavLink(html.H5('EXPLORE', style={'font-weight': 'bold',  'marginTop':'13px', 'marginLeft':'10px','color':'white'}),  href="#" )),
+        dbc.NavItem(dbc.NavLink(html.H5('EXPLORE', style={'font-weight': 'bold',  'marginTop':'13px', 'marginLeft':'10px','color':'white'}),  href="/" )),
         dbc.NavItem(dbc.NavLink(html.H5('ABOUT', style={'font-weight': 'bold',  'marginTop':'13px', 'marginLeft':'10px','color':'white'}),  href="#" )),
 
         dbc.Collapse(
@@ -63,8 +63,10 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/':
+    if pathname == '/' or pathname == '/SummaryPage':
         return SummaryPage.layout
+    elif pathname == '/SymbolPage':
+        return SymbolPage.layout
    
 if __name__ == '__main__':
     app.run_server(debug=True)

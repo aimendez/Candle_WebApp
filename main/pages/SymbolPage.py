@@ -5,6 +5,7 @@ import dash_daq as daq
 from dash.dependencies import Input, Output, State
 from dash import no_update
 import dash
+import flask 
 
 import plotly.graph_objs as go 
 from plotly.subplots import make_subplots
@@ -23,25 +24,10 @@ import os
 
 
 cwd = os.path.dirname(os.getcwd())
-print(cwd+'/logos/logo_transparent.png')
 #=====================================================================================#
 #=====================================================================================#
 # NAV BAR
 
-navbar = dbc.Navbar(
-    [
-        html.A(
-            dbc.Row(
-                [
-                    dbc.Col(html.Img(src=cwd+'/logos/logo_transparent.png', height="30px")),
-                    dbc.Col(dbc.NavbarBrand("Navbar", className="ml-2")),
-                ],
-                align="center",
-                no_gutters=True,
-            ),
-        ),
-    ],
-)
 
 #=====================================================================================#
 #=====================================================================================#
@@ -53,14 +39,24 @@ navbar = dbc.Navbar(
 # CALLBACKS 
 
 
+@app.callback(
+    [
+    Output('symbol-page', 'children'),
+    ],
+    [
+    Input('url', 'pathname'),
+    ])
+def callback_func(pathname):
+	query_str =  flask.request.referrer.split('?')[-1] #value1=symbol&
+	symbol =  query_str.split('&')[0]
+	return [no_update]
+
 
 #=====================================================================================#
 #=====================================================================================#
 # LAYOUT
 
-layout = html.Div([ 
-	navbar
-])
+layout = html.Div( 'this is a test', id = 'symbol-page')
 
 #=====================================================================================#
 #=====================================================================================#

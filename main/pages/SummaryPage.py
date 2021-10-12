@@ -61,7 +61,6 @@ for obj in bucket.objects.filter(Prefix=prefix):
 	figure_dict[symbol] = img_b64
 
 
-
 #=====================================================================================#
 #=====================================================================================#
 # COMPONENTS
@@ -235,13 +234,13 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 		        		[
 	                        dbc.CardHeader( 
 	                        				html.A(
-	                        						href='/', children = [ 
+	                        						href=f'/SymbolPage?{symbol}', target="_blank", 	children = [ 
 	                        												html.Div( [ html.H5(header1, style={'font-weight': 'bold', 'color':'#FFAB4A', 'marginLeft':'15px'}), header2 ], className = 'row justify-content-between mb-0')
 	                        											]
 	                        						),
                 								style = {'height': '40px'}),
 	                        html.Div(className='row', children = [
-	                        	html.Div( children = summary_description, className='col', style={'marginTop':'30px', 'marginBottom':'30px', 'marginLeft':'40px'} ),
+	                        	html.Div( children = summary_description, className='col', style={'marginTop':'60px', 'marginBottom':'30px', 'marginLeft':'40px'} ),
 	                        	html.Div( fig, className='col' ),
 
 	                        	])

@@ -28,7 +28,7 @@ df_spy500 = pd.read_csv(main_dir+'/main/assets/spy500_list.csv', index_col = 0)
 # Yesterday's Date
 d =  datetime.today() #+ timedelta(days=1) 
 dend = d - timedelta(days=2) if d.weekday() == 6 else d - timedelta(days=1) if  d.weekday() == 5 else d
-dstart = d - timedelta(days=60) 
+dstart = d - timedelta(days=600) 
 
 # Get list of all possible patterns from pattern_list
 pattern_options = pattern_list.pattern_list
@@ -37,12 +37,35 @@ pattern_options = pattern_list.pattern_list
 summary = {}
 list_figures = []
 for i, symbol in enumerate(df_spy500.Symbol[:100]):
-	data = utils.get_data(symbol, start=dstart, end=dend)
-	if len(data)==0: continue;
+
+	data_all = utils.get_data(symbol, start=dstart, end=dend)
+	if len(data_all)==0: continue;
+
+	data_all['SMA_50'] = data_all['close'].rolling(50).mean()
+	data_all['SMA_200'] =  data_all['close'].rolling(200).mean()
+	data = data_all.iloc[-40:, :]
+
 	data.index = pd.to_datetime(data.index)
 
 	#plotyl 
 	fig = go.Figure()
+	fig.update_layout(xaxis_rangeslider_visible=False, paper_bgcolor = '#303030',	plot_bgcolor = '#303030')
+	fig.update_xaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A"))
+	fig.update_yaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A") )
+	fig.update_layout(legend=dict(
+							    yanchor="top",
+							    y=0.99,
+							    xanchor="right",
+							    x=0.96,
+							    #bgcolor ='white',
+							    bordercolor = 'white',
+							    borderwidth = 2,
+							    font=dict(
+							            size=12,
+							            color="white"
+							        ),
+							))
+
 	fig.add_trace( go.Candlestick( x = data.index ,
                                     open = data.open,
                                     high = data.high,
@@ -52,13 +75,10 @@ for i, symbol in enumerate(df_spy500.Symbol[:100]):
                                     name = 'OHLC'
                                     )
 							)
-	fig.update_layout(xaxis_rangeslider_visible=False, paper_bgcolor = '#303030',	plot_bgcolor = '#303030')
-	fig.update_xaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A"))
-	fig.update_yaxes(showline=True, linewidth=1, linecolor='black',  gridwidth=1, gridcolor='LightGray', mirror=True, tickfont=dict(color="#FFAB4A") )
-	#fig.show()
-	#break
-	img_bytes = fig.to_image(format="png")
+	fig.add_trace( go.Scatter( x = data.index , y = data['SMA_50'],  name = 'SMA 50', marker = {'color':'#FF8230'}) )
+	fig.add_trace( go.Scatter( x = data.index , y = data['SMA_200'],  name = 'SMA 200', marker = {'color':'yellow'}) )
 	
+	img_bytes = fig.to_image(format="png")
 	
 	data = data[-10:]
 	patterns_found = []
