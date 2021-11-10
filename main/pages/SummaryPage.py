@@ -1,5 +1,6 @@
-import dash_core_components as dcc
+from dash import dcc
 from dash import html 
+
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
@@ -25,6 +26,8 @@ import utils
 import os
 import io
 import boto3
+import warnings
+warnings.filterwarnings("ignore")
 main_dir = os.path.dirname(os.getcwd())
 #=====================================================================================#
 #=====================================================================================#
@@ -228,7 +231,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 
         #---------------------------------------------------------------------#
 		summary_description = html.P( [date_line, type_line,  strength_line,] )
-		card_tmp=  html.Div( 
+		card_tmp=  html.A( html.Div( 
 		    	[
 		        dbc.Card(
 		        		[
@@ -237,7 +240,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 	                        						href=f'/SymbolPage?{symbol}', target="_blank", 	children = [ 
 	                        												html.Div( [ html.H5(header1, style={'font-weight': 'bold', 'color':'#FFAB4A', 'marginLeft':'15px'}), header2 ], className = 'row justify-content-between mb-0')
 	                        											]
-	                        						),
+	                        						, style ={"text-decoration": "none"}),
                 								style = {'height': '40px'}),
 	                        html.Div(className='row', children = [
 	                        	html.Div( children = summary_description, className='col', style={'marginTop':'60px', 'marginBottom':'30px', 'marginLeft':'40px'} ),
@@ -246,6 +249,7 @@ def CreateSummary(filter_date, filter_strength, filter_type, filter_direction):
 	                        	])
 		               ], className="card")
 		    	], style = {'marginBottom':'50px'})
+		, href = f'/SymbolPage?{symbol}', style={'color':'white', "text-decoration": "none"})
 
 		total_cards.append([dates, type_patterns, strength_patterns, direction_final, sector, card_tmp])
 

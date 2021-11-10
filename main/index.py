@@ -1,10 +1,12 @@
-import dash_core_components as dcc
-import dash_bootstrap_components as dbc
+from dash import dcc
 from dash import html 
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 from app import app
 from pages import SummaryPage, SymbolPage
 import utils 
+import warnings
+warnings.filterwarnings("ignore")
 
 server = app.server
 app.title = "CandleDash"
@@ -33,7 +35,7 @@ navbar = dbc.Navbar(
     [
         html.A(
             dbc.Row(
-                [ dbc.Col(html.Img(src=app.get_asset_url('logo.png'), style={'marginTop':'23px', 'height':'85%', 'width':'85%'})) ],
+                [ dbc.Col( html.Img(src=app.get_asset_url('logo.png'), style={'marginTop':'23px','marginBottom':'20px', 'height':'85%', 'width':'85%'})) ],
                 align="center",
                 no_gutters=True,
             ),

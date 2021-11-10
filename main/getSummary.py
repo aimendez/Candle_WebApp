@@ -13,6 +13,8 @@ import json
 from base64 import b64encode
 from talib import abstract
 import mplfinance as mpf
+import warnings
+warnings.filterwarnings("ignore")
 main_dir = os.path.dirname(os.getcwd())
 
 # AWS S3 Credentials
